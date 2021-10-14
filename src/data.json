@@ -1,0 +1,62 @@
+[
+    {
+        "id": "1",
+        "type": "収入",
+        "date": "2021/10/25",
+        "content": "給料振込",
+        "amount": 250000,
+        "largeCategory": "収入",
+        "middleCategory": "給与",
+        "memo": ""
+    },
+    {
+        "id": "2",
+        "type": "収入",
+        "date": "2021/09/25",
+        "content": "給料振込",
+        "amount": 250000,
+        "largeCategory": "収入",
+        "middleCategory": "給与",
+        "memo": ""
+    },
+    {
+        "id": "3",
+        "type": "収入",
+        "date": "2021/08/25",
+        "content": "給料振込",
+        "amount": 250000,
+        "largeCategory": "収入",
+        "middleCategory": "給与",
+        "memo": ""
+    },
+    {
+        "id": "4",
+        "type": "支出",
+        "date": "2021/10/25",
+        "content": "飲み会",
+        "amount": -3000,
+        "largeCategory": "食費",
+        "middleCategory": "外食",
+        "memo": ""
+    },
+    {
+        "id": "5",
+        "type": "支出",
+        "date": "2021/10/25",
+        "content": "レストラン",
+        "amount": -6000,
+        "largeCategory": "食費",
+        "middleCategory": "外食",
+        "memo": ""
+    },
+    {
+        "id": "6",
+        "type": "支出",
+        "date": "2021/10/25",
+        "content": "日用品",
+        "amount": -2300,
+        "largeCategory": "日用品",
+        "middleCategory": "日用品",
+        "memo": ""
+    }
+]
