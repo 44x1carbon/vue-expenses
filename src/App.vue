@@ -11,7 +11,7 @@
           <th>中項目</th>
           <th>メモ</th>
         </tr>
-        <tr v-for="row in sortedIncomeExpensesData" :key="row.id">
+        <tr v-for="row in incomeExpensesDetailsData" :key="row.id">
           <th>{{ row.date }}</th>
           <th>{{ row.content }}</th>
           <th>{{ row.amount }}</th>
@@ -38,7 +38,7 @@ export default {
     }
   },
   computed: {
-    sortedIncomeExpensesData () {
+    incomeExpensesDetailsData () {
       return [...this.incomeExpensesData].sort((a, b) => {
         return dayjs(b.date, 'YYYY/MM/DD').unix() - dayjs(a.date, 'YYYY/MM/DD').unix()
       })
