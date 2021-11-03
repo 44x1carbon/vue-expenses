@@ -37,14 +37,20 @@
               <th>水</th>
               <th>木</th>
               <th>金</th>
-              <th>土</th>
+              <th>土</th>
             </tr>
             <tbody>
               <tr v-for="(row, i) in calendar" :key="i">
-                <td v-for="(col, j) in row" :key="j" :class="{ 'current-month': col.isCurrentMonth  }">
+                <td
+                  v-for="(col, j) in row"
+                  :key="j"
+                  :class="{ 'current-month': col.isCurrentMonth }"
+                >
                   <div>{{ col.date.format("MM/DD") }}</div>
                   <div v-if="col.totalIncome !== 0">{{ col.totalIncome }}</div>
-                  <div v-if="col.totalExpenses !== 0">{{ col.totalExpenses }}</div>
+                  <div v-if="col.totalExpenses !== 0">
+                    {{ col.totalExpenses }}
+                  </div>
                 </td>
               </tr>
             </tbody>
@@ -55,6 +61,7 @@
     <section>
       <h2>収入・支出詳細</h2>
       <div>
+        <button @click="isModalShow = true">手入力</button>
         <div>
           <button @click="prevMonth">◀︎</button>
           <span>{{ displayDateRange[0].format("YYYY/MM/DD") }}</span>
@@ -83,6 +90,101 @@
         </table>
       </div>
     </section>
+    <div class="modal-outer" v-if="isModalShow">
+      <div class="modal-overlay" @click="isModalShow = false"></div>
+      <div class="modal">
+        <div class="modal-header">
+          <h2 class="model-title">家計簿入力</h2>
+          <button class="modal-close" @click="isModalShow = false">×</button>
+        </div>
+        <div class="tabs">
+          <div class="tab" @click="modalTab = '支出'">支出</div>
+          <div class="tab" @click="modalTab = '収入'">収入</div>
+        </div>
+        <div class="modal-contents">
+          <div v-if="modalTab == '支出'">
+            <table>
+              <tr>
+                <th>日付</th>
+                <td><input type="date" v-model="expensesInput.date" /></td>
+              </tr>
+              <tr>
+                <th>支出金額</th>
+                <td>-<input type="number" v-model="expensesInput.amount" />円</td>
+              </tr>
+              <tr>
+                <th>項目</th>
+                <td>
+                  <select v-model="expensesInput.largeCategory">
+                    <option
+                      v-for="category in Object.keys(expensesCategory)"
+                      :key="category"
+                      :value="category"
+                      >{{ category }}</option
+                    >
+                  </select>
+                  <select v-model="expensesInput.middleCategory">
+                    <option
+                      v-for="category in expensesCategory[expensesInput.largeCategory]"
+                      :key="category"
+                      :value="category"
+                      >{{ category }}</option
+                    >
+                  </select>
+                  <input
+                    type="text"
+                    placeholder="内容をご入力下さい(任意)"
+                    v-model="expensesInput.content"
+                  />
+                </td>
+              </tr>
+            </table>
+
+            <button @click="saveExpenses">保存する</button>
+          </div>
+          <div v-if="modalTab == '収入'">
+            <table>
+              <tr>
+                <th>日付</th>
+                <td><input type="date" v-model="incomeInput.date" /></td>
+              </tr>
+              <tr>
+                <th>収入金額</th>
+                <td>+<input type="number" v-model="incomeInput.amount" />円</td>
+              </tr>
+              <tr>
+                <th>項目</th>
+                <td>
+                  <select v-model="incomeInput.largeCategory">
+                    <option
+                      v-for="category in Object.keys(incomeCategory)"
+                      :key="category"
+                      :value="category"
+                      >{{ category }}</option
+                    >
+                  </select>
+                  <select v-model="incomeInput.middleCategory">
+                    <option
+                      v-for="category in incomeCategory[incomeInput.largeCategory]"
+                      :key="category"
+                      :value="category"
+                      >{{ category }}</option
+                    >
+                  </select>
+                  <input
+                    type="text"
+                    placeholder="内容をご入力下さい(任意)"
+                    v-model="incomeInput.content"
+                  />
+                </td>
+              </tr>
+            </table>
+
+            <button @click="saveIncome">保存する</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -91,8 +193,9 @@ import IncomeExpensesData from './data.json'
 import customParseFormat from 'dayjs/plugin/customParseFormat'
 import isBetween from 'dayjs/plugin/isBetween'
 import dayjs from 'dayjs'
-
 import _ from 'lodash'
+import ExpensesCategory from './expenses-category.json'
+import IncomeCategory from './income-category.json'
 dayjs.extend(customParseFormat)
 dayjs.extend(isBetween)
 
@@ -101,7 +204,26 @@ export default {
   data () {
     return {
       incomeExpensesData: [...IncomeExpensesData],
-      displayDateRangeStart: dayjs(new Date(2021, 9, 1, 0, 0, 0, 0))
+      displayDateRangeStart: dayjs(new Date(2021, 9, 1, 0, 0, 0, 0)),
+      expensesCategory: ExpensesCategory,
+      incomeCategory: IncomeCategory,
+      modalTab: '支出',
+      isModalShow: false,
+
+      expensesInput: {
+        date: dayjs().format('YYYY-MM-DD'),
+        amount: 0,
+        largeCategory: Object.keys(ExpensesCategory)[0],
+        middleCategory: ExpensesCategory[Object.keys(ExpensesCategory)[0]][0],
+        content: ''
+      },
+      incomeInput: {
+        date: dayjs().format('YYYY-MM-DD'),
+        amount: 0,
+        largeCategory: Object.keys(IncomeCategory)[0],
+        middleCategory: IncomeCategory[Object.keys(IncomeCategory)[0]][0],
+        content: ''
+      }
     }
   },
   methods: {
@@ -109,33 +231,78 @@ export default {
       this.displayDateRangeStart = this.displayDateRangeStart.add(1, 'month')
     },
     prevMonth () {
-      this.displayDateRangeStart = this.displayDateRangeStart.subtract(1, 'month')
+      this.displayDateRangeStart = this.displayDateRangeStart.subtract(
+        1,
+        'month'
+      )
     },
     nowMonth () {
-      this.displayDateRangeStart = dayjs().date(1).hour(0).minute(0).second(0).millisecond(0)
+      this.displayDateRangeStart = dayjs()
+        .date(1)
+        .hour(0)
+        .minute(0)
+        .second(0)
+        .millisecond(0)
     },
     findIncomeByDate (date) {
       return this.incomeExpensesData.filter(item => {
-        return item.type === '収入' && dayjs(item.date, 'YYYY/MM/DD').isSame(date)
+        return (
+          item.type === '収入' && dayjs(item.date, 'YYYY/MM/DD').isSame(date)
+        )
       })
     },
     findExpensesByDate (date) {
       return this.incomeExpensesData.filter(item => {
-        return item.type === '支出' && dayjs(item.date, 'YYYY/MM/DD').isSame(date)
+        return (
+          item.type === '支出' && dayjs(item.date, 'YYYY/MM/DD').isSame(date)
+        )
+      })
+    },
+    saveIncome () {
+      this.incomeExpensesData.push({
+        id: '',
+        type: '収入',
+        amount: this.incomeInput.amount,
+        date: dayjs(this.incomeInput.date, 'YYYY/MM/DD'),
+        content: this.incomeInput.content,
+        largeCategory: this.incomeInput.largeCategory,
+        middleCategory: this.incomeInput.middleCategory
+      })
+    },
+    saveExpenses () {
+      this.incomeExpensesData.push({
+        id: '',
+        type: '支出',
+        amount: this.expensesInput.amount * -1,
+        date: dayjs(this.expensesInput.date, 'YYYY/MM/DD'),
+        content: this.expensesInput.content,
+        largeCategory: this.expensesInput.largeCategory,
+        middleCategory: this.expensesInput.middleCategory
       })
     }
   },
   computed: {
     incomeExpensesDetailsData () {
-      return [...this.incomeExpensesData].sort((a, b) => {
-        return dayjs(b.date, 'YYYY/MM/DD').unix() - dayjs(a.date, 'YYYY/MM/DD').unix()
-      }).filter(item => {
-        return dayjs(item.date, 'YYYY/MM/DD').isBetween(this.displayDateRange[0], this.displayDateRange[1])
-      })
+      return [...this.incomeExpensesData]
+        .sort((a, b) => {
+          return (
+            dayjs(b.date, 'YYYY/MM/DD').unix() -
+            dayjs(a.date, 'YYYY/MM/DD').unix()
+          )
+        })
+        .filter(item => {
+          return dayjs(item.date, 'YYYY/MM/DD').isBetween(
+            this.displayDateRange[0],
+            this.displayDateRange[1]
+          )
+        })
     },
     // 表示期間
     displayDateRange () {
-      return [this.displayDateRangeStart, this.displayDateRangeStart.add(1, 'month')]
+      return [
+        this.displayDateRangeStart,
+        this.displayDateRangeStart.add(1, 'month')
+      ]
     },
     // 表示している期間の合計収入
     currentMonthIncome () {
@@ -165,7 +332,10 @@ export default {
     },
     calendar () {
       const startDate = this.displayDateRangeStart.startOf('w')
-      const endDate = this.displayDateRangeStart.endOf('M').endOf('w').add(1, 'd')
+      const endDate = this.displayDateRangeStart
+        .endOf('M')
+        .endOf('w')
+        .add(1, 'd')
 
       const calendar = []
 
